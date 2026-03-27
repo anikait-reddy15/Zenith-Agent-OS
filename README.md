@@ -1,0 +1,2 @@
+# Zenith-Agent-OS
+A serverless multi-agent orchestration system built on Google Cloud Run that automates complex personal workflows. By leveraging a Primary Orchestrator and specialized Sub-Agents, the system integrates fragmented data from calendars, task managers, and notes via the Model Context Protocol (MCP). Engineered with a Scale-to-Zero architecture, the platform ensures high-performance task execution with zero idle-cost, providing a scalable and cost-effective solution for unified information management.

@@ -1,0 +1,23 @@
+# --- Core AI & Multi-Agent Orchestration ---
+langgraph==0.2.20           # The stateful orchestration engine
+langchain==0.3.0            # Core LLM framework
+langchain-google-genai==2.0.0 # Gemini Pro/Flash integration
+langchain-core==0.3.0       # Essential base classes
+
+# --- Model Context Protocol (MCP) ---
+mcp                 # Connects agents to calendars, notes, and tasks
+
+# --- API & Web Server (Scale-to-Zero) ---
+fastapi==0.115.0            # Fast web framework
+uvicorn[standard]==0.30.6   # High-performance ASGI server
+pydantic-settings==2.5.0    # Settings management via env vars
+
+# --- Database & Persistence ---
+# Necessary for LangGraph "Checkpoints" (saving agent state)
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.9      # Connector for PostgreSQL/Cloud SQL/Supabase
+
+# --- Cloud Utilities ---
+python-dotenv==1.0.1        # Loads your local .env (ignored by git)
+google-cloud-secret-manager==2.21.0 # Securely fetches API keys in GCP
+httpx==0.27.2               # Async HTTP client for tool calling

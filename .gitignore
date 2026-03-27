@@ -1,0 +1,54 @@
+# --- Google Cloud & Deployment ---
+# DO NOT ignore cloudbuild.yaml (it is needed for deployment)
+# DO NOT ignore Dockerfile (it is needed for Cloud Run)
+.gcloud/
+.cloud-build-utils/
+auth.json
+service-account-key.json
+
+# --- Environment & Secrets ---
+# Crucial: Ignore local keys to prevent leaks
+.env
+.env.local
+.env.*.local
+*.pem
+secrets.py
+
+# --- Python Settings ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.deprecated
+
+# --- Databases & Vector Stores ---
+# Ignore local database files (use Cloud SQL or Supabase in production)
+*.db
+*.sqlite3
+/db/local_data/
+/vectors/
+index.faiss
+
+# --- Operating System & IDE ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Logs ---
+*.log
+logs/

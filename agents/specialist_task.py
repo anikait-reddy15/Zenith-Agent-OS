@@ -54,7 +54,6 @@ async def save_to_memory(entities: list[Entity]) -> str:
     )
     return str(result)
 
-
 # 3. Compile the Agent
 # create_react_agent automatically builds the graph that loops between the LLM and the tools
 agent_tools = [save_to_memory]

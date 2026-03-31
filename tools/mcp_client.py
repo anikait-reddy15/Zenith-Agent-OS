@@ -2,9 +2,11 @@ import asyncio
 from contextlib import AsyncExitStack
 from typing import Any, Dict, List
 import shutil
+import sys
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+import mcp.types as types
 
 class AgentMCPClient:
     def __init__(self, command: str, args: List[str]):
@@ -30,6 +32,23 @@ class AgentMCPClient:
 
         # Initialize the session protocol
         self.session = await self._exit_stack.enter_async_context(ClientSession(read_stream, write_stream))
+        
+        # The server requires a response to the 'roots/list' security check.
+        # We access the private _request_handlers dictionary safely.
+        for attr_name in dir(types):
+            if "Root" in attr_name and "Request" in attr_name and "List" in attr_name:
+                req_type = getattr(types, attr_name)
+                
+                async def handle_roots_list(*args, **kwargs):
+                    # We explicitly grant the server access to your project folder
+                    return types.ListRootsResult(roots=[
+                        types.Root(uri="file:///C:/Projects/Zenith-Agent-OS", name="ProjectRoot")
+                    ])
+                    
+                if hasattr(self.session, "_request_handlers"):
+                    self.session._request_handlers[req_type] = handle_roots_list
+                break
+
         await self.session.initialize()
         print("Connected and initialized successfully!")
 
@@ -55,15 +74,11 @@ class AgentMCPClient:
         await self._exit_stack.aclose()
         print("Connection closed.")
 
-import sys
-import shutil
-
+# Test Function
 async def test_run():
     """Test function to check if connection to the MCP server is being established or not"""
-    # 1. Use shutil.which to find the exact absolute path of npx
     npx_path = shutil.which("npx")
     
-    # 2. Safety check: If it can't find it, stop and warn the user
     if not npx_path:
         print("ERROR: Could not find 'npx' on your system.")
         print("Please ensure Node.js is installed and you have restarted your terminal.")
@@ -71,7 +86,6 @@ async def test_run():
 
     print(f"Found npx at: {npx_path}")
 
-    # 3. Use the absolute path in the MCP Client
     client = AgentMCPClient(command=npx_path, args=["-y", "@modelcontextprotocol/server-memory"])
     
     try:
@@ -93,5 +107,4 @@ async def test_run():
         await client.close()
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(test_run())

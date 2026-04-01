@@ -8,7 +8,6 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
 
-# Import all our specialists
 from agents.specialist_task import memory_agent
 from agents.specialist_info import fs_agent
 from agents.specialist_todo import todo_agent
@@ -28,22 +27,29 @@ class AgentState(TypedDict):
 
 class RouteDecision(BaseModel):
     step: str = Field(
-        description="Choose 'todo_agent' to manage tasks or the database. Choose 'memory_agent' to save observations. Choose 'filesystem_agent' to read files. Choose 'general_chat' for normal questions."
+        description="Choose 'todo_agent', 'memory_agent', 'filesystem_agent', or 'general_chat'. If ALL tasks requested by the user are completely finished, choose 'FINISH'."
     )
 
 def supervisor_node(state: AgentState) -> AgentState:
-    print("\n[Orchestrator] Analyzing user prompt...")
+    print("\n[Orchestrator] Analyzing conversation state...")
     router_llm = llm.with_structured_output(RouteDecision)
+    
+    # We explicitly instruct the Orchestrator to loop until all steps are done.
     system_prompt = SystemMessage(
-        content="You are the Primary Orchestrator of Zenith Agent OS. Route the request to the correct specialist."
+        content=(
+            "You are the Primary Orchestrator of Zenith Agent OS. "
+            "You manage a multi-step workflow. Review the conversation history. "
+            "If the user asked for multiple things, route to the specialist needed for the NEXT unfinished step. "
+            "If ALL tasks requested by the user are complete, you MUST choose 'FINISH'."
+        )
     )
+    
     messages_to_analyze = [system_prompt] + state["messages"]
     decision = router_llm.invoke(messages_to_analyze)
     
-    print(f"[Orchestrator] Routing task to: {decision.step}")
+    print(f"[Orchestrator] Decision: {decision.step}")
     return {"next_node": decision.step}
 
-# --- Specialist Caller Nodes ---
 async def call_memory_agent(state: AgentState) -> AgentState:
     print("[Specialist] Memory Agent activated.")
     response = await memory_agent.ainvoke({"messages": state["messages"]})
@@ -77,6 +83,8 @@ def route_from_supervisor(state: AgentState) -> str:
     return state["next_node"]
 
 builder.add_edge(START, "supervisor")
+
+# The Supervisor can route to any specialist, or end the process completely.
 builder.add_conditional_edges(
     "supervisor",
     route_from_supervisor,
@@ -84,13 +92,17 @@ builder.add_conditional_edges(
         "memory_agent": "memory_agent",
         "filesystem_agent": "filesystem_agent",
         "todo_agent": "todo_agent",
-        "general_chat": "general_chat"
+        "general_chat": "general_chat",
+        "FINISH": END
     }
 )
 
-builder.add_edge("memory_agent", END)
-builder.add_edge("filesystem_agent", END)
-builder.add_edge("todo_agent", END)
+# CYCLICAL ROUTING: After a specialist finishes, it returns control to the Supervisor!
+builder.add_edge("memory_agent", "supervisor")
+builder.add_edge("filesystem_agent", "supervisor")
+builder.add_edge("todo_agent", "supervisor")
+
+# General chat usually answers standard questions, so it can exit directly.
 builder.add_edge("general_chat", END)
 
 primary_agent = builder.compile()

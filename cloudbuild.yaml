@@ -1,13 +1,10 @@
 steps:
-  # Step 1: Build the Docker container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/$PROJECT_ID/zenith-agent-os', '.']
     
-  # Step 2: Push the container image to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/zenith-agent-os']
     
-  # Step 3: Deploy the container to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -17,7 +14,7 @@ steps:
       - '--image'
       - 'gcr.io/$PROJECT_ID/zenith-agent-os'
       - '--region'
-      - 'asia-south1' # Deploys to Mumbai (closest to your region for lower latency)
+      - 'asia-south1'
       - '--allow-unauthenticated'
       - '--port'
       - '8080'

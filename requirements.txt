@@ -21,3 +21,6 @@ psycopg2-binary==2.9.9      # Connector for PostgreSQL/Cloud SQL/Supabase
 python-dotenv==1.0.1        # Loads your local .env (ignored by git)
 google-cloud-secret-manager==2.21.0 # Securely fetches API keys in GCP
 httpx==0.27.2               # Async HTTP client for tool calling
+
+# --- Simple Web Interface ---
+streamlit                   # Library to deploy a simple web interface
